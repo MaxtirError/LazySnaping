@@ -13,7 +13,7 @@ public:
 	void Cut();
 	void Get_alpha(bool** &alpha);
 private:
-	const double lambda = 400;
+	const double lambda = 200;
 	int W, H;
 	Vector3d** Image;
 	PtSet&TB;

@@ -12,11 +12,13 @@ public:
 	void Classify(int &class_num, int** &be, std::vector<PtSet> &Region, std::vector<std::set<int>> &Edges)
 	{
 		be = new int*[W];
+		int* Gray = new int[W * H];
 		for (int i = 0; i < W; ++i) {
 			be[i] = new int[H];
 			for (int j = 0; j < H; ++j) {
-				int Gray = Image[i][j].mean();
-				Pts[Gray].push_back(std::make_pair(i, j));
+				int G = Image[i][j].mean();
+				Gray[i * H + j] = G;
+				Pts[G].push_back(std::make_pair(i, j));
 				be[i][j] = -1;
 			}
 		}
@@ -33,15 +35,13 @@ public:
 						continue;
 					if (be[nx][ny] != -1)
 					{
+						int dis = abs(Gray[px * H + py] - Gray[nx * H + ny]);
+						if (dis > thredshold) continue;
 						if (be[px][py] == -1) 
 						{
 							be[px][py] = be[nx][ny];
 							Region[be[px][py]].push_back(std::make_pair(px, py));
-						}
-						else if(be[nx][ny] != be[px][py])
-						{
-							Edges[be[nx][ny]].insert(be[px][py]);
-							Edges[be[px][py]].insert(be[nx][ny]);
+							break;
 						}
 					}
 				}
@@ -52,6 +52,17 @@ public:
 					be[px][py] = class_num++;
 					Edges.push_back(std::set<int>());
 				}
+				for (int d = 0; d < 4; ++d)
+				{
+					int nx = px + dx[d], ny = py + dy[d];
+					if (nx < 0 || nx >= W || ny < 0 || ny >= H)
+						continue;
+					if (be[nx][ny] != -1 && be[nx][ny] != be[px][py])
+					{
+						Edges[be[nx][ny]].insert(be[px][py]);
+						Edges[be[px][py]].insert(be[nx][ny]);
+					}
+				}
 			}
 		}
 		_class_num = class_num;
@@ -60,6 +71,7 @@ public:
 private:
 	const int dx[4] = { 0, 0, 1, -1 };
 	const int dy[4] = { 1, -1, 0, 0 };
+	const int thredshold = 20;
 	Vector3d** Image;
 	int W, H;
 	int _class_num;
